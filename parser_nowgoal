@@ -1,0 +1,247 @@
+#рабочая версия от 05.07.2020
+import requests 
+import re
+from bs4 import BeautifulSoup
+import csv
+
+URL = 'http://nowgoal.group/gf/data/goal8.xml'
+HEADERS = {'user-agent': 'Mozilla/5.0 (Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36)', 'accept' : '*/*'}
+HEADERS1 = {'user-agent': 'Mozilla/5.0 (Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36)', 'accept' : '*/*'}
+
+def get_html(url, params=None):
+    r = requests.get( url, headers= HEADERS, params=params)
+    
+    return r
+
+def get_pages_count(html):
+    soup = BeautifulSoup(html, 'html.parser')
+        
+def get_content(html):
+    soup = BeautifulSoup (html, 'html.parser')
+    items = soup.find_all('ids')
+    items = str(items) 
+    items=items.replace("<ids>", '').replace(",</ids>", '').replace('[','').replace(']','')
+    items2=items.split(',')
+    print(len(items2))
+    #print(items)
+
+    for i in range(len(items2)):
+        print (items2[i])   
+        u ='http://www.nowgoal.group/analysis/'+str(items2[i]) +'.html'
+        print('Парсится', i+1, 'матч из', len(items2), str(items2[i]))
+        #print(type(u))
+        #print(len(u))
+        print(u)
+       # parse1 (u)
+        html = get_html1(u)
+        if html.status_code == 200:
+            get_content1 (html.text)
+            team4_list = ["", "" , "",  "", "", ""]
+            with open('c:\\users\Venera\match.csv','a', encoding='utf-8', newline='') as file:
+                writer=csv.writer(file, delimiter=';')
+                writer.writerow(team4_list)    
+        
+        else:
+            print ('Ошибка')
+            
+    
+def parse ():
+    html = get_html (URL)
+    if html.status_code == 200:
+        # print(html.text)
+        get_content (html.text)
+        
+    else:
+         print ('Ошибка')
+    #print (html.status_code)
+
+with open('c:\\users\Venera\match.csv','w', newline='') as file:
+                writer=csv.writer(file, delimiter=';')     
+    
+parse ()
+
+  
+
+
+def get_html1(url, params=None):
+    r = requests.get( url, headers= HEADERS1, params=params)
+    return r
+
+   
+def get_content1(html):
+    soup = BeautifulSoup (html, 'html.parser')
+    
+    
+       
+    
+    for i in range(10):
+        items = soup.find_all('tr', id='tr1_'+str(i+1))
+        #print (items)
+        if len(items) == 0:
+            team3_list = ['', '', '', '', '', '']
+            print (team3_list)
+            with open('c:\\users\Venera\match.csv','a', encoding='utf-8',newline='') as file:
+                writer=csv.writer(file, delimiter=';')
+                writer.writerow(team3_list)
+        else:    
+            data = re.findall(r'20\d\d,\d{1,2},\d{1,2},\d{1,2},\d\d,\d\d', str(items))
+            data=str(data)
+            
+            data=data.replace("['",'').replace("']",'').replace(',','-')
+            team1= re.findall(r'[A-Z]{1}\w{1,50}' or '[A-Z]{1}\w{1,50}\s\w{1,50}', str(items))
+            
+            not_team = re.findall(r'Team', str(items))
+            #print (not_team)
+            if not_team == ['Team', 'Team']:
+                #print ('Да')
+            
+                team1 = re.sub(r'Javascript','', str(team1))
+                team1 = re.sub(r'Date','', str(team1))
+                team1_list=team1.split(',')
+            
+                if len(team1_list[0]) == 9:
+                    del(team1_list[0])
+                while (" ''" in team1_list):
+                    team1_list.remove(" ''") 
+                team2_str = "".join(team1_list)
+                team2_str= team2_str.replace("'", '')
+                team2_list = team2_str.split('Team')
+                team2_list1 = team2_list[0].strip()
+                team2_list2 = team2_list[1].strip()
+                team2_list3 = team2_list[2].strip()
+                goal = re.findall(r'red2">\d{1,2}-\d{1,2}', str(items))
+                goal1 = re.sub(r'red2">','', str(goal))
+                goal2 = goal1.split('-')
+                goal_1 = int(goal2[0].replace("['",''))
+                goal_2 = int(goal2[1].replace("']",''))
+                team2_list1=team2_list1.replace('[','')
+                team2_list3=team2_list3.replace(']','')
+                team3_list = [str(data), str(team2_list1), str(team2_list2), str(team2_list3), str(goal_1), str(goal_2)]
+                with open('c:\\users\Venera\match.csv','a', encoding='utf-8',newline='') as file:
+                    writer=csv.writer(file, delimiter=';')
+                    writer.writerow(team3_list)
+                print (team3_list)
+            else:
+                
+                #print ('Нет команды')
+                team1 = re.sub(r'Javascript','', str(team1))
+                team1 = re.sub(r'Date','', str(team1))
+                team1_list=team1.split(',')
+            
+                if len(team1_list[0]) == 9:
+                    del(team1_list[0])
+                while (" ''" in team1_list):
+                    team1_list.remove(" ''") 
+                team2_str = "".join(team1_list)
+                team2_str= team2_str.replace("'", '')
+                team2_list = team2_str.split(' ')
+                team2_list1 = team2_list[0].strip()
+                team2_list2 = 'team1'
+                team2_list3 = 'team2'
+                goal = re.findall(r'red2">\d{1,2}-\d{1,2}', str(items))
+                goal1 = re.sub(r'red2">','', str(goal))
+                goal2 = goal1.split('-')
+                goal_1 = int(goal2[0].replace("['",''))
+                goal_2 = int(goal2[1].replace("']",''))
+                team2_list1=team2_list1.replace('[','')
+                team2_list3=team2_list3.replace(']','')
+                team3_list = [str(data), str(team2_list1), str(team2_list2), str(team2_list3), str(goal_1), str(goal_2)]
+                with open('c:\\users\Venera\match.csv','a', encoding='utf-8',newline='') as file:
+                    writer=csv.writer(file, delimiter=';')
+                    writer.writerow(team3_list)
+                print (team3_list)
+                
+                
+    team5_list = ["", "" , "",  "", "", ""]
+    with open('c:\\users\Venera\match.csv','a', encoding='utf-8',newline='') as file:
+            writer=csv.writer(file, delimiter=';')
+            writer.writerow(team5_list) 
+              
+    
+    for i in range(10):
+        items = soup.find_all('tr', id='tr2_'+str(i+1))
+        #print (items)
+        if len(items) == 0:
+            team3_list = ['', '', '', '', '', '']
+            print (team3_list)
+            with open('c:\\users\Venera\match.csv','a', encoding='utf-8',newline='') as file:
+                writer=csv.writer(file, delimiter=';')
+                writer.writerow(team3_list)
+        else:    
+            data = re.findall(r'20\d\d,\d{1,2},\d{1,2},\d{1,2},\d\d,\d\d', str(items))
+            data=str(data)
+            
+            data=data.replace("['",'').replace("']",'').replace(',','-')
+            team1= re.findall(r'[A-Z]{1}\w{1,50}' or '[A-Z]{1}\w{1,50}\s\w{1,50}', str(items))
+            
+            not_team = re.findall(r'Team', str(items))
+            #print (not_team)
+            if not_team == ['Team', 'Team']:
+                team1 = re.sub(r'Javascript','', str(team1))
+                team1 = re.sub(r'Date','', str(team1))
+                team1_list=team1.split(',')
+            
+                if len(team1_list[0]) == 9:
+                    del(team1_list[0])
+                while (" ''" in team1_list):
+                    team1_list.remove(" ''") 
+                team2_str = "".join(team1_list)
+                team2_str= team2_str.replace("'", '')
+                team2_list = team2_str.split('Team')
+                team2_list1 = team2_list[0].strip()
+                team2_list2 = team2_list[1].strip()
+                team2_list3 = team2_list[2].strip()
+                goal = re.findall(r'red2">\d{1,2}-\d{1,2}', str(items))
+                goal1 = re.sub(r'red2">','', str(goal))
+                goal2 = goal1.split('-')
+                goal_1 = int(goal2[0].replace("['",''))
+                goal_2 = int(goal2[1].replace("']",''))
+                team2_list1=team2_list1.replace('[','')
+                team2_list3=team2_list3.replace(']','')
+                team3_list = [str(data), str(team2_list1), str(team2_list2), str(team2_list3), str(goal_1), str(goal_2)]
+                with open('c:\\users\Venera\match.csv','a', encoding='utf-8',newline='') as file:
+                    writer=csv.writer(file, delimiter=';')
+                    writer.writerow(team3_list)
+                print (team3_list)
+            else:
+                
+                #print ('Нет команды')
+                team1 = re.sub(r'Javascript','', str(team1))
+                team1 = re.sub(r'Date','', str(team1))
+                team1_list=team1.split(',')
+                if len(team1_list[0]) == 9:
+                    del(team1_list[0])
+                while (" ''" in team1_list):
+                    team1_list.remove(" ''") 
+                team2_str = "".join(team1_list)
+                team2_str= team2_str.replace("'", '')
+                team2_list = team2_str.split(' ')
+                team2_list1 = team2_list[0].strip()
+                team2_list2 = 'team1'
+                team2_list3 = 'team2'
+                goal = re.findall(r'red2">\d{1,2}-\d{1,2}', str(items))
+                goal1 = re.sub(r'red2">','', str(goal))
+                goal2 = goal1.split('-')
+                goal_1 = int(goal2[0].replace("['",''))
+                goal_2 = int(goal2[1].replace("']",''))
+                team2_list1=team2_list1.replace('[','')
+                team2_list3=team2_list3.replace(']','')
+                team3_list = [str(data), str(team2_list1), str(team2_list2), str(team2_list3), str(goal_1), str(goal_2)]
+                with open('c:\\users\Venera\match.csv','a', encoding='utf-8',newline='') as file:
+                    writer=csv.writer(file, delimiter=';')
+                    writer.writerow(team3_list)
+                print (team3_list)
+    
+    
+def parse1 (url): 
+    html = get_html1(url)
+    print (x)
+    if html.status_code == 200:
+        get_content1 (html.text)
+        team4_list = ["", "" , "",  "", "", ""]
+        with open('c:\\users\Venera\match.csv','a', encoding='utf-8', newline='') as file:
+            writer=csv.writer(file, delimiter=';')
+            writer.writerow(team4_list)    
+        
+    else:
+         print ('Ошибка')
